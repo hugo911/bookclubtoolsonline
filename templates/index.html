@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EPUB 词汇提取器 - 智能英语学习助手</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .content-section {
+            padding: 40px 30px;
+        }
+        
+        .upload-card {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+        
+        .upload-card:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+        
+        .upload-card.dragover {
+            border-color: #4facfe;
+            background: #e3f2fd;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+        
+        .threshold-input {
+            max-width: 200px;
+            margin: 0 auto;
+        }
+        
+        .btn-process {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-process:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(118, 75, 162, 0.4);
+        }
+        
+        .guide-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .guide-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .guide-step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .step-number {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: #e8f5e8;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .results-icon {
+            font-size: 4rem;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+        
+        .alert-custom {
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .file-info {
+            display: none;
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .threshold-help {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .header-section h1 {
+                font-size: 2rem;
+            }
+            
+            .content-section {
+                padding: 20px 15px;
+            }
+            
+            .upload-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1><i class="fas fa-book-open"></i> EPUB/PDF 词汇提取器</h1>
+            <p>智能提取英文电子书中的低频词汇，助力高效学习</p>
+        </div>
+        
+        <!-- Content Section -->
+        <div class="content-section">
+            <!-- Upload Form -->
+            <div class="upload-card" id="upload-area">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #4facfe; margin-bottom: 20px;"></i>
+                <h4>上传您的 EPUB/PDF 文件</h4>
+                <p class="text-muted mb-4">拖拽文件到此处或点击选择文件</p>
+                
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="file-input-wrapper">
+                        <input type="file" name="book_file" id="book_file" required accept=".epub,.pdf">
+                        <label for="book_file" class="file-input-label">
+                            <i class="fas fa-plus"></i> 选择 EPUB/PDF 文件
+                        </label>
+                    </div>
+                    
+                    <div class="file-info" id="file-info">
+                        <i class="fas fa-file-alt"></i>
+                        <span id="file-name"></span>
+                        <span class="badge bg-info ms-2" id="file-size"></span>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="rank_threshold" class="form-label"><strong>词汇量阈值设置</strong></label>
+                        <input type="number" name="rank_threshold" id="rank_threshold" value="15000" 
+                               class="form-control threshold-input" min="1000" max="50000">
+                        <div class="threshold-help">
+                            <i class="fas fa-info-circle"></i> 数值越高，提取的词汇越少但更具挑战性
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-process mt-4">
+                        <i class="fas fa-magic"></i> 开始智能分析
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Loading Animation -->
+            <div class="loader" id="loader">
+                <div class="spinner"></div>
+                <h5>正在智能分析您的电子书...</h5>
+                <p class="text-muted">这可能需要1-2分钟，请耐心等待</p>
+                <div class="progress mt-3" style="height: 8px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         style="width: 100%; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results" id="results">
+                <div class="results-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h4>分析完成！</h4>
+                <p>我们为您找到了 <strong id="word-count" style="color: #4facfe; font-size: 1.5rem;">0</strong> 个值得学习的低频词汇</p>
+                <a href="/download" class="btn btn-success download-btn">
+                    <i class="fas fa-download"></i> 下载 Anki/Quizlet 词汇表
+                </a>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="content-section" style="background: #f8f9fa; margin: 0;">
+            <h3 class="text-center mb-4">🌟 核心功能</h3>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h5>智能词汇识别</h5>
+                        <p>使用先进的自然语言处理技术，准确识别文本中的词汇并进行词干化处理</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-filter"></i>
+                        </div>
+                        <h5>个性化难度筛选</h5>
+                        <p>根据词汇频率排名，筛选出适合您当前水平的学习词汇</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h5>无缝学习集成</h5>
+                        <p>生成标准格式的词汇表，直接导入 Anki 或 Quizlet 开始学习</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Usage Guide -->
+        <div class="content-section">
+            <div class="guide-section">
+                <h3 class="text-center mb-4">📚 使用指南</h3>
+                
+                <div class="guide-step">
+                    <div class="step-number">1</div>
+                    <div>
+                        <h6><strong>准备电子书文件</strong></h6>
+                        <p>确保您的电子书是 EPUB 或 PDF 格式。如果是其他格式（如 MOBI），请先转换为 EPUB 格式。推荐使用 <a href="https://calibre-ebook.com/" target="_blank">Calibre</a> 进行格式转换。</p>
+                        <div class="alert alert-info mt-2">
+                            <small><strong>提示：</strong>PDF 格式的文本提取质量可能因文件制作方式而异。扫描版 PDF 可能无法正确提取文本。</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <h6><strong>调整词汇量阈值</strong></h6>
+                        <p>根据您的英语水平调整阈值：</p>
+                        <ul class="mt-2">
+                            <li><strong>初学者</strong>：建议设置为 5000-8000</li>
+                            <li><strong>中级水平</strong>：建议设置为 8000-15000</li>
+                            <li><strong>高级水平</strong>：建议设置为 15000-25000</li>
+                            <li><strong>专业水平</strong>：建议设置为 25000+</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <h6><strong>开始分析</strong></h6>
+                        <p>点击"开始智能分析"按钮，系统将自动提取文本、识别词汇、查找翻译并生成词汇表。整个过程通常需要1-2分钟。</p>
+                    </div>
+                </div>
+                
+                <div class="guide-step">
+                    <div class="step-number">4</div>
+                    <div>
+                        <h6><strong>下载并导入学习工具</strong></h6>
+                        <p>下载生成的 CSV 文件，然后：</p>
+                        <ul class="mt-2">
+                            <li><strong>Anki</strong>：文件 → 导入，选择下载的 CSV 文件</li>
+                            <li><strong>Quizlet</strong>：创建学习集 → 导入，选择"制表符分隔"格式</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tips Section -->
+            <div class="alert alert-info alert-custom">
+                <h5><i class="fas fa-lightbulb"></i> 学习小贴士</h5>
+                <ul class="mb-0">
+                    <li>建议先阅读原文，遇到生词时再查看词汇表，这样学习效果更好</li>
+                    <li>可以根据章节分别生成词汇表，避免一次性学习过多词汇</li>
+                    <li>定期复习已学词汇，使用间隔重复的方法提高记忆效果</li>
+                    <li>结合语境记忆单词，而不仅仅是死记硬背释义</li>
+                </ul>
+            </div>
+            
+            <!-- FAQ Section -->
+            <div class="mt-4">
+                <h4>🤔 常见问题</h4>
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                支持哪些电子书格式？
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                目前支持 EPUB 和 PDF 格式。如果您的电子书是其他格式，请使用 Calibre 等工具转换为 EPUB 格式。
+                                <br><strong>注意：</strong>PDF 格式的文本提取质量取决于文件制作方式，扫描版 PDF 可能无法正确提取文本。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                为什么有些词汇没有翻译？
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                词汇翻译来自内置词典，可能不包含所有专业术语或新词。显示为"N/A"的词汇建议您手动查找翻译。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                如何确定合适的词汇量阈值？
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                建议从较低的阈值开始，如果生成的词汇过多，可以逐步提高阈值。一般来说，每次学习100-200个新词汇比较合适。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 文件上传处理
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('book_file');
+        const uploadArea = document.getElementById('upload-area');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const loader = document.getElementById('loader');
+        const results = document.getElementById('results');
+        const wordCount = document.getElementById('word-count');
+        
+        // 文件大小格式化
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 文件选择处理
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.style.display = 'block';
+                
+                // 验证文件格式
+                const fileExtension = file.name.toLowerCase();
+                if (!fileExtension.endsWith('.epub') && !fileExtension.endsWith('.pdf')) {
+                    showAlert('请选择 EPUB 或 PDF 格式的文件！', 'warning');
+                    return;
+                }
+                
+                // 验证文件大小（限制为50MB）
+                if (file.size > 50 * 1024 * 1024) {
+                    showAlert('文件大小不能超过 50MB！', 'warning');
+                    return;
+                }
+            }
+        });
+        
+        // 拖拽上传
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+        
+        // 表单提交处理
+        uploadForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('请先选择一个 EPUB 或 PDF 文件！', 'warning');
+                return;
+            }
+            
+            // 验证阈值
+            const threshold = parseInt(document.getElementById('rank_threshold').value);
+            if (isNaN(threshold) || threshold < 1000 || threshold > 50000) {
+                showAlert('词汇量阈值必须在 1000-50000 之间！', 'warning');
+                return;
+            }
+            
+            // 显示加载动画
+            loader.style.display = 'block';
+            results.style.display = 'none';
+            uploadArea.style.display = 'none';
+            
+            // 提交表单
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loader.style.display = 'none';
+                uploadArea.style.display = 'block';
+                
+                if (data.status === 'success') {
+                    wordCount.textContent = data.count;
+                    results.style.display = 'block';
+                    showAlert('分析完成！找到了 ' + data.count + ' 个值得学习的词汇。', 'success');
+                    
+                    // 平滑滚动到结果区域
+                    results.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    showAlert('处理失败：' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                loader.style.display = 'none';
+                uploadArea.style.display = 'block';
+                showAlert('网络错误，请重试！', 'danger');
+                console.error('Error:', error);
+            });
+        });
+        
+        // 显示提示消息
+        function showAlert(message, type) {
+            // 移除现有的提示
+            const existingAlerts = document.querySelectorAll('.alert-auto');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // 创建新的提示
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-custom alert-auto`;
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // 插入到页面顶部
+            const container = document.querySelector('.content-section');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // 自动消失
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+        
+        // 阈值输入提示
+        const thresholdInput = document.getElementById('rank_threshold');
+        thresholdInput.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            const helpText = document.querySelector('.threshold-help');
+            
+            if (value < 5000) {
+                helpText.innerHTML = '<i class="fas fa-info-circle"></i> 适合初学者：将获得较多基础词汇';
+            } else if (value < 15000) {
+                helpText.innerHTML = '<i class="fas fa-info-circle"></i> 适合中级水平：平衡难度和数量';
+            } else if (value < 25000) {
+                helpText.innerHTML = '<i class="fas fa-info-circle"></i> 适合高级水平：专注于高难度词汇';
+            } else {
+                helpText.innerHTML = '<i class="fas fa-info-circle"></i> 专业水平：仅包含最具挑战性的词汇';
+            }
+        });
+        
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 触发阈值提示
+            thresholdInput.dispatchEvent(new Event('input'));
+            
+            // 添加平滑滚动
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+# Temporary files
+temp_data/
+temp_uploaded_file.epub
+temp_uploaded_file.pdf
+logs/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files
+.env
+.venv
+env/
+venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+.history/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+.dockerignore
+docker-compose.override.yml
+secret_key.txt
+
+# Application logs
+*.log
